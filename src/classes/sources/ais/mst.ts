@@ -37,8 +37,11 @@ class MyShipTracking extends Source {
         "sec-fetch-user": "?1",
         "sec-gpc": "1",
         "upgrade-insecure-requests": "1",
+        // offset/user_tz pinned to UTC so the "Position Received" time renders
+        // in UTC; we parse that wall-clock time as UTC below. (Previously this
+        // sent Europe/Berlin, which made timestamps ~1-2h ahead of true UTC.)
         cookie:
-          "usr_lang_exist=1; port_tz=LT; user_tz=MT; user_df=1; session_id_sp_trk=fd1i0pb2mt6i4nra9c1mejsmvk; offset=Europe%2FBerlin; usr_lang_exist=1; io=ilOBwd-Xh9Z1fGzpFaM0",
+          "usr_lang_exist=1; port_tz=UTC; user_tz=UTC; user_df=1; session_id_sp_trk=fd1i0pb2mt6i4nra9c1mejsmvk; offset=Etc%2FUTC; usr_lang_exist=1; io=ilOBwd-Xh9Z1fGzpFaM0",
       },
       "GET",
     );
