@@ -48,19 +48,22 @@ class Server {
     this.app.get(
       "/ais/mt/:mmsi/location/latest",
       async (req: any, res: any) => {
-        try {
-          api.getLocationFromMT(req.params.mmsi, (result) => {
-            res.send({
-              error: null,
-              data: result,
-            });
+        const mmsi = req.params.mmsi;
+        // MarineTraffic's vessel pages are currently behind anti-bot protection,
+        // so the direct MT scrape returns nothing (and is slow). Serve AIS
+        // positions from the working MyShipTracking source, falling back to
+        // MarineTraffic only if MyShipTracking has no data. Note: getLocationFrom*
+        // already passes a complete { error, data } envelope to the callback, so
+        // we forward it as-is rather than re-wrapping it.
+        api.getLocationFromMST(mmsi, (mstResult) => {
+          if (mstResult.data) {
+            res.send(mstResult);
+            return;
+          }
+          api.getLocationFromMT(mmsi, (mtResult) => {
+            res.send(mtResult);
           });
-        } catch (error) {
-          res.send({
-            error: error || "Unknown error",
-            data: null,
-          });
-        }
+        });
       },
     );
     this.app.get(
