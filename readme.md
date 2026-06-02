@@ -62,6 +62,26 @@ curl http://localhost:5000/ais/mt/211879870/location/latest
 curl http://localhost:5000/adsb/adsbe/abc123/location/latest
 ```
 
+### Legacy endpoints
+
+Kept for backwards compatibility.
+
+| Endpoint | Description |
+| --- | --- |
+| `GET /legacy/getLastPositionFromMT/:mmsi` | Vessel position from MarineTraffic. |
+| `GET /legacy/getLastPositionFromVF/:mmsi` | Vessel position (served by the MyShipTracking source). |
+| `GET /legacy/getLastPosition/:mmsi` | Vessel position from the default source. |
+| `GET /legacy/getVesselsInArea/:area` | Vessels in a region; `:area` is a comma-separated list, e.g. `WMED,EMED`. |
+| `GET /legacy/getVesselsNearMe/:lat/:lng/:distance` | Vessels within `:distance` km of a coordinate. |
+| `GET /legacy/getVesselsInPort/:shipPort` | Vessels in a named port, e.g. `Hamburg`. |
+
+```bash
+curl http://localhost:5000/legacy/getLastPosition/211879870
+curl http://localhost:5000/legacy/getVesselsInArea/WMED,EMED
+curl http://localhost:5000/legacy/getVesselsNearMe/37.7749/-122.4194/10
+curl http://localhost:5000/legacy/getVesselsInPort/Hamburg
+```
+
 ---
 
 ## 📦 Response format
@@ -72,7 +92,7 @@ Every position endpoint returns the same envelope:
 {
   "error": null,
   "data": {
-    "timestamp": "2026-06-01T02:08:00.000Z",
+    "timestamp": "2026-06-01T00:08:00.000Z",
     "latitude": 49.12292,
     "longitude": -123.18416,
     "course": 17,

@@ -4,10 +4,34 @@ import type { Request, Response, NextFunction } from "express";
 
 // Directory + file where access logs are persisted.
 const LOG_DIR = process.env.LOG_DIR ?? path.join(process.cwd(), "logs");
-const LOG_FILE = path.join(LOG_DIR, "access.log");
+export const LOG_FILE = path.join(LOG_DIR, "access.log");
 
 fs.mkdirSync(LOG_DIR, { recursive: true });
 const logStream = fs.createWriteStream(LOG_FILE, { flags: "a" });
+
+/**
+ * Return the most recent access-log entries (newest first), parsed from JSON.
+ * Safe to call before any request has been logged (returns []).
+ */
+export function readRecentLogs(limit = 200): any[] {
+  let raw: string;
+  try {
+    raw = fs.readFileSync(LOG_FILE, "utf8");
+  } catch {
+    return [];
+  }
+  const lines = raw.split("\n").filter((l) => l.trim().length > 0);
+  return lines
+    .slice(-limit)
+    .reverse()
+    .map((l) => {
+      try {
+        return JSON.parse(l);
+      } catch {
+        return { raw: l };
+      }
+    });
+}
 
 function clientIp(req: Request): string {
   const forwarded = req.headers["x-forwarded-for"];
