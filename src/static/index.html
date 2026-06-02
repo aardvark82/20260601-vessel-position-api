@@ -207,16 +207,6 @@
         <p class="desc">Latest position for an aircraft by ICAO hex address (ADS-B Exchange).</p>
         <pre><code>curl http://localhost:5000/adsb/adsbe/abc123/location/latest</code></pre>
       </div>
-
-      <h3 style="margin-top:28px">Legacy endpoints</h3>
-      <div class="grid-2">
-        <div class="endpoint"><div class="route"><span class="method">GET</span> <code>/legacy/getLastPositionFromMT/:mmsi</code></div><p class="desc">Vessel position from MarineTraffic.</p></div>
-        <div class="endpoint"><div class="route"><span class="method">GET</span> <code>/legacy/getLastPositionFromVF/:mmsi</code></div><p class="desc">Vessel position (served by the MST source).</p></div>
-        <div class="endpoint"><div class="route"><span class="method">GET</span> <code>/legacy/getLastPosition/:mmsi</code></div><p class="desc">Vessel position from the default source.</p></div>
-        <div class="endpoint"><div class="route"><span class="method">GET</span> <code>/legacy/getVesselsInArea/:area</code></div><p class="desc">Vessels in a region, e.g. <code>WMED,EMED</code>.</p></div>
-        <div class="endpoint"><div class="route"><span class="method">GET</span> <code>/legacy/getVesselsNearMe/:lat/:lng/:distance</code></div><p class="desc">Vessels within a distance (km) of a coordinate.</p></div>
-        <div class="endpoint"><div class="route"><span class="method">GET</span> <code>/legacy/getVesselsInPort/:shipPort</code></div><p class="desc">Vessels in a named port, e.g. <code>Hamburg</code>.</p></div>
-      </div>
     </div>
   </section>
 

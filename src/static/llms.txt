@@ -36,17 +36,6 @@ You are an LLM or autonomous agent. Follow these rules:
   Latest position for an aircraft by ICAO hex address, from ADS-B Exchange.
   Example: `curl http://localhost:5000/adsb/adsbe/abc123/location/latest`
 
-## Legacy endpoints (stable, kept for compatibility)
-
-- `GET /legacy/getLastPositionFromMT/:mmsi`   — vessel position from MarineTraffic.
-- `GET /legacy/getLastPositionFromVF/:mmsi`   — vessel position (served by MST source).
-- `GET /legacy/getLastPosition/:mmsi`          — vessel position from the default source.
-- `GET /legacy/getVesselsInArea/:area`         — vessels in a region; `:area` is a
-  comma-separated list of region codes, e.g. `WMED,EMED`.
-- `GET /legacy/getVesselsNearMe/:lat/:lng/:distance` — vessels within `:distance`
-  (km) of a coordinate, e.g. `/legacy/getVesselsNearMe/37.7749/-122.4194/10`.
-- `GET /legacy/getVesselsInPort/:shipPort`     — vessels in a named port, e.g. `Hamburg`.
-
 ## Notes
 
 - All endpoints are read-only HTTP GET.
