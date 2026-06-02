@@ -1,200 +1,158 @@
-# Position API
+# 🚢 Position API
 
-A Node.js/TypeScript API for retrieving real-time positions of vessels and aircraft from various sources, including MarineTraffic (AIS) and ADS-B Exchange.
+> Real-time positions of **vessels** and **aircraft** from public tracking sources — over a simple JSON HTTP API. No API key required.
 
-## Features
-
-- Fetch latest vessel positions by MMSI from MarineTraffic.
-- Fetch latest aircraft positions by ICAO from ADS-B Exchange.
-- Legacy endpoints for compatibility.
-- Area and port-based vessel queries.
-- Puppeteer-based scraping with stealth plugin for anti-bot evasion.
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js (v18+ recommended)
-- npm
-
-### Installation
-
-```bash
-git clone https://github.com/transparency-everywhere/position-api.git
-cd position-api
-npm install
-```
-
-### Configuration
-
-Copy the environment template and adjust as needed:
-
-```bash
-cp .env.template .env
-```
-
-### Build
-
-```bash
-npm run build
-```
-
-### Run
-
-Development mode (with auto-reload):
-
-```bash
-npm run dev
-```
-
-Production mode:
-
-```bash
-npm start
-```
-
-## API Endpoints
-
-### Vessel Position
-
-- `GET /ais/mt/:mmsi/location/latest`  
-  Get latest position for a vessel by MMSI.
-
-### Aircraft Position
-
-- `GET /adsb/adsbe/:icao/location/latest`  
-  Get latest position for an aircraft by ICAO code.
-
-### Legacy Endpoints
-
-- `/legacy/getLastPositionFromVF/:mmsi`
-- `/legacy/getLastPositionFromMT/:mmsi`
-- `/legacy/getLastPosition/:mmsi`
-- `/legacy/getVesselsInArea/:area`
-- `/legacy/getVesselsNearMe/:lat/:lng/:distance`
-- `/legacy/getVesselsInPort/:shipPort`
-
-## For LLMs / agents
-
-Machine-readable usage instructions are served at [`/llms.txt`](http://localhost:5000/llms.txt) and live in [`src/static/llms.txt`](src/static/llms.txt).
-
-## Access logs
-
-Every request is logged as a single JSON line to `logs/access.log` (and echoed to stdout). Override the directory with the `LOG_DIR` env var. Each entry includes the timestamp, client IP, method, URL, status code, response time, and user agent.
-
-## Development
-
-- Lint code: `npm run lint`
-- Format code: `npm run prettier`
-- Run tests: `npm test`
-
-## Contributing
-
-Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
-
-## License
-
-[ISC](LICENSE)
+A small Node.js / TypeScript service that returns the latest known location of a ship (by MMSI) or an aircraft (by ICAO address), scraped from MarineTraffic, MyShipTracking, and ADS-B Exchange.
 
 ---
 
-*Powered by Node.js, Express, Puppeteer, and TypeScript.*
+## ✨ Features
+
+- 🛳️ **Vessel positions** — latest location for any ship by MMSI (MarineTraffic / MyShipTracking AIS).
+- ✈️ **Aircraft positions** — latest location for any aircraft by ICAO hex address (ADS-B Exchange).
+- 🗺️ **Area & port queries** — list vessels in a region, near a coordinate, or inside a named port.
+- 🤖 **Agent-ready** — machine-readable usage spec at [`/llms.txt`](http://localhost:5000/llms.txt) so LLMs can call it correctly.
+- 📋 **Access logging** — every request recorded as a JSON line for easy auditing.
+
+---
+
+## 🚀 Quick start
+
+```bash
+# 1. Clone & install (requires Node.js v18+)
+git clone https://github.com/aardvark82/20260601-vessel-position-api.git
+cd 20260601-vessel-position-api
+npm install
+
+# 2. Configure
+cp .env.template .env        # adjust if needed (e.g. set PORT)
+
+# 3. Run
+npm start                    # production
+# or
+npm run dev                  # development, with auto-reload
+```
+
+The server listens on **port 5000** by default. Try it:
+
+```bash
+curl http://localhost:5000/ais/mt/211879870/location/latest
+```
+
+> Replace `localhost:5000` with your server's host and port if you've deployed it elsewhere.
+
+---
+
+## 📡 API reference
+
+All endpoints are **read-only `GET`** requests and return **JSON**.
+
+### Vessel & aircraft positions
+
+| Endpoint | Description |
+| --- | --- |
+| `GET /ais/mt/:mmsi/location/latest` | Latest position for a vessel by MMSI (MarineTraffic). |
+| `GET /adsb/adsbe/:icao/location/latest` | Latest position for an aircraft by ICAO hex address (ADS-B Exchange). |
+
+```bash
+# Vessel by MMSI
+curl http://localhost:5000/ais/mt/211879870/location/latest
+
+# Aircraft by ICAO hex
+curl http://localhost:5000/adsb/adsbe/abc123/location/latest
+```
+
+### Legacy endpoints
+
+Kept for backwards compatibility.
+
+| Endpoint | Description |
+| --- | --- |
+| `GET /legacy/getLastPositionFromMT/:mmsi` | Vessel position from MarineTraffic. |
+| `GET /legacy/getLastPositionFromVF/:mmsi` | Vessel position (served by the MyShipTracking source). |
+| `GET /legacy/getLastPosition/:mmsi` | Vessel position from the default source. |
+| `GET /legacy/getVesselsInArea/:area` | Vessels in a region; `:area` is a comma-separated list, e.g. `WMED,EMED`. |
+| `GET /legacy/getVesselsNearMe/:lat/:lng/:distance` | Vessels within `:distance` km of a coordinate. |
+| `GET /legacy/getVesselsInPort/:shipPort` | Vessels in a named port, e.g. `Hamburg`. |
+
+```bash
+curl http://localhost:5000/legacy/getLastPosition/211879870
 curl http://localhost:5000/legacy/getVesselsInArea/WMED,EMED
-
-# Legacy: Get vessels near a location
 curl http://localhost:5000/legacy/getVesselsNearMe/37.7749/-122.4194/10
-
-# Legacy: Get vessels in port
 curl http://localhost:5000/legacy/getVesselsInPort/Hamburg
 ```
 
 ---
 
-## Notes
+## 📦 Response format
 
-- All endpoints return JSON.
-- Replace `localhost:5000` with your server's address and port if different.
-- Pull requests and issues are welcome!
+Every position endpoint returns the same envelope:
+
+```json
+{
+  "error": null,
+  "data": {
+    "timestamp": "2026-06-01T02:08:00.000Z",
+    "latitude": 49.12292,
+    "longitude": -123.18416,
+    "course": 17,
+    "speed": 0,
+    "source": "myshiptracking.com",
+    "source_type": "AIS"
+  }
+}
+```
+
+- On **success**, `error` is `null` and `data` holds the position.
+- On **failure**, `error` holds a message and `data` is `null`.
+- `altitude` is included for aircraft only.
+- Always check `timestamp` before treating a position as "current" — data is scraped from public sources and may be delayed.
 
 ---
 
-## Notes
+## 🤖 For LLMs & agents
 
-- All endpoints return JSON.
-- Replace `localhost:5000` with your server's address and port if different.
-- Pull requests and issues are welcome!
+Machine-readable instructions describing how to call the API live at [`/llms.txt`](http://localhost:5000/llms.txt) (source: [`src/static/llms.txt`](src/static/llms.txt)). Point an agent at that URL and it can use the API without further documentation.
 
 ---
-- **Get latest location by ICAO**
-  ```
-  GET /adsb/adsbe/:icao/location/latest
-  ```
-  **Example:**
-  ```
-  curl http://localhost:5000/adsb/adsbe/abc123/location/latest
-  ```
 
-### Legacy Vessel Routes
+## 📋 Access logs
 
-- **Get last position from MST (replaces VF)**
-  ```
-  GET /legacy/getLastPositionFromVF/:mmsi
-  ```
-  **Example:**
-  ```
-  curl http://localhost:5000/legacy/getLastPositionFromVF/211879870
-  ```
+Every request is written as a single JSON line to `logs/access.log` (and echoed to stdout):
 
-- **Get last position from Marinetraffic**
-  ```
-  GET /legacy/getLastPositionFromMT/:mmsi
-  ```
-  **Example:**
-  ```
-  curl http://localhost:5000/legacy/getLastPositionFromMT/211879870
-  ```
+```json
+{"time":"2026-06-02T14:32:11.415Z","ip":"::1","method":"GET","url":"/ais/mt/211879870/location/latest","status":200,"durationMs":2.514,"userAgent":"curl/8.7.1"}
+```
 
-- **Get last position (default)**
-  ```
-  GET /legacy/getLastPosition/:mmsi
-  ```
-  **Example:**
-  ```
-  curl http://localhost:5000/legacy/getLastPosition/211879870
-  ```
+Each entry includes the timestamp, client IP, method, URL, status code, response time, and user agent. Override the directory with the `LOG_DIR` environment variable.
 
-- **Get vessels in area**
-  ```
-  GET /legacy/getVesselsInArea/:area
-  ```
-  - `:area` is a comma-separated list, e.g. `WMED,EMED`
-  **Example:**
-  ```
-  curl http://localhost:5000/legacy/getVesselsInArea/WMED,EMED
-  ```
+---
 
-- **Get vessels near me**
-  ```
-  GET /legacy/getVesselsNearMe/:lat/:lng/:distance
-  ```
-  **Example:**
-  ```
-  curl http://localhost:5000/legacy/getVesselsNearMe/37.7749/-122.4194/10
-  ```
+## 🛠️ Development
 
-- **Get vessels in port**
-  ```
-  GET /legacy/getVesselsInPort/:shipPort
-  ```
-  **Example:**
-  ```
-  curl http://localhost:5000/legacy/getVesselsInPort/Hamburg
-  ```
+| Command | Action |
+| --- | --- |
+| `npm run dev` | Run with auto-reload. |
+| `npm run build` | Compile TypeScript to `dist/`. |
+| `npm test` | Run the test suite. |
+| `npm run lint` | Lint the code. |
+| `npm run prettier` | Format the code. |
 
-## Notes
+---
+
+## ⚠️ Notes
 
 - All endpoints return JSON.
-- Replace `localhost:5000` with your server's address and port if different.
+- Positions are scraped from public sources, so availability and freshness depend on those providers and on the vessel/aircraft actually broadcasting. Be considerate with request volume.
 
+## 🤝 Contributing
 
+Pull requests are welcome! For major changes, please open an issue first to discuss what you'd like to change.
 
+## 📄 License
+
+[ISC](LICENSE)
+
+---
+
+*Powered by Node.js, Express, Puppeteer & TypeScript.*
