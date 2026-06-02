@@ -1,0 +1,54 @@
+# Position API
+
+> A Node.js/TypeScript API that returns the most recent known position of
+> vessels (via AIS / MarineTraffic) and aircraft (via ADS-B Exchange).
+> All responses are JSON. No authentication is required. Replace the base
+> URL `http://localhost:5000` below with the deployed host.
+
+## How to use this API
+
+You are an LLM or autonomous agent. Follow these rules:
+
+1. Choose the endpoint that matches what you are tracking:
+   - A ship/vessel  -> you need its MMSI (a 9-digit Maritime Mobile Service Identity).
+   - An aircraft    -> you need its ICAO 24-bit hex address (e.g. `abc123`).
+2. Make a plain HTTP GET request. There are no query parameters, headers, or
+   API keys to set.
+3. Parse the JSON response. The canonical shape is:
+   `{ "error": <string|null>, "data": <object|null> }`.
+   - On success, `error` is `null` and `data` holds the position.
+   - On failure, `error` is a message and `data` is `null`. Do not retry
+     immediately; surface the error to the user.
+4. A position object contains: `timestamp`, `latitude`, `longitude`,
+   `course`, `speed`, `source`, `source_type`, and optionally `altitude`
+   (aircraft only). Latitude/longitude are decimal degrees.
+5. Data is scraped from public sources and may be delayed or unavailable for
+   a given identifier. Always check `timestamp` before presenting a position
+   as "current".
+
+## Primary endpoints
+
+- `GET /ais/mt/:mmsi/location/latest`
+  Latest position for a vessel by MMSI, from MarineTraffic.
+  Example: `curl http://localhost:5000/ais/mt/211879870/location/latest`
+
+- `GET /adsb/adsbe/:icao/location/latest`
+  Latest position for an aircraft by ICAO hex address, from ADS-B Exchange.
+  Example: `curl http://localhost:5000/adsb/adsbe/abc123/location/latest`
+
+## Legacy endpoints (stable, kept for compatibility)
+
+- `GET /legacy/getLastPositionFromMT/:mmsi`   — vessel position from MarineTraffic.
+- `GET /legacy/getLastPositionFromVF/:mmsi`   — vessel position (served by MST source).
+- `GET /legacy/getLastPosition/:mmsi`          — vessel position from the default source.
+- `GET /legacy/getVesselsInArea/:area`         — vessels in a region; `:area` is a
+  comma-separated list of region codes, e.g. `WMED,EMED`.
+- `GET /legacy/getVesselsNearMe/:lat/:lng/:distance` — vessels within `:distance`
+  (km) of a coordinate, e.g. `/legacy/getVesselsNearMe/37.7749/-122.4194/10`.
+- `GET /legacy/getVesselsInPort/:shipPort`     — vessels in a named port, e.g. `Hamburg`.
+
+## Notes
+
+- All endpoints are read-only HTTP GET.
+- All responses are JSON.
+- Be considerate with request volume; this service scrapes upstream providers.

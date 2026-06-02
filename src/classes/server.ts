@@ -4,6 +4,7 @@ import path from "path";
 import { api } from "../legacy/api";
 import { areaApi } from "../legacy/area";
 import ADSBexchange from "./sources/adsb/adsbe";
+import accessLog from "./middleware/accessLog";
 class Server {
   app: any;
   server: any;
@@ -19,8 +20,14 @@ class Server {
         origin: "*",
       }),
     );
+    this.app.use(accessLog());
     this.app.get("/", (_request: any, response: any) => {
       response.sendFile(path.join(__dirname, "/../static/index.html"));
+    });
+    // Machine-readable usage instructions for LLMs / agents.
+    this.app.get("/llms.txt", (_request: any, response: any) => {
+      response.type("text/plain");
+      response.sendFile(path.join(__dirname, "/../static/llms.txt"));
     });
     this.loadLegacyRoutes();
     this.loadRoutes();

@@ -42,49 +42,68 @@ class MyShipTracking extends Source {
       },
       "GET",
     );
-    const pattern =
-      /<th>(Longitude|Latitude|Course|Speed|Position Received)<\/th>\s*<td>(.*?)<\/td>/g;
-    const extractedData: any = {};
-    let match, parsedDate;
 
+    // Parse the labelled <th>/<td> rows. NOTE: myshiptracking no longer puts
+    // the coordinates in these cells (they render "---" server-side and are
+    // filled in client-side), so Latitude/Longitude come from the map script
+    // below. Speed and the "Position Received" timestamp are still here.
+    const pattern =
+      /<th>(Longitude|Latitude|Course|Speed|Position Received)<\/th>\s*<td>(.*?)<\/td>/gs;
+    const extractedData: any = {};
+    let match;
     while ((match = pattern.exec(result)) !== null) {
-      const key = match[1];
-      const value = match[2];
-      extractedData[key] = value;
+      extractedData[match[1]] = match[2];
     }
 
-    console.log(extractedData["Position Received"]);
-    console.log(123);
+    // The authoritative lat/lon/course are emitted into the page as a call to
+    // canvas_map_generate("map_locator", <zoom>, <lat>, <lon>, <course>, ...).
+    const mapMatch = result.match(
+      /canvas_map_generate\(\s*"[^"]*"\s*,\s*[\d.]+\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)/,
+    );
+    if (!mapMatch) {
+      throw new Error(
+        "Could not locate vessel coordinates in myshiptracking response (page layout may have changed or vessel has no recent position)",
+      );
+    }
+    const latitude = parseFloat(mapMatch[1]);
+    const longitude = parseFloat(mapMatch[2]);
+    // AIS course over ground; 360/511 are "not available" sentinels.
+    let course = parseFloat(mapMatch[3]);
+    if (!isFinite(course) || course >= 360) {
+      course = 0;
+    }
 
-    // Extract the date and time string using regular expression
-    const regex = /title="([^"]+)"/;
-    const matchd = extractedData["Position Received"].match(regex);
+    // Speed cell shows an anchor icon when the vessel is moored/stopped.
+    const speedCell = extractedData.Speed ?? "";
+    const speed = /fa-anchor/.test(speedCell)
+      ? 0
+      : parseFloat(speedCell.replace(/<[^>]*>/g, "")) || 0;
 
-    if (matchd?.[1]) {
-      const dateTimeString = matchd[1];
-
-      // Parse the extracted date and time string
-      const [datePart, timePart] = dateTimeString.split(" ");
-      const [year, month, day] = datePart.split("-");
-      const [hour, minute] = timePart.split(":");
-
-      // JavaScript months are 0-based, so subtract 1 from the month
-      parsedDate = new Date(year, month - 1, day, hour, minute);
-
-      console.log(parsedDate); // This will log the parsed date object
-    } else {
-      console.log("Date not found in the input string.");
+    // "Position Received" cell carries the exact timestamp in a title attribute,
+    // e.g. title="2026-06-01 00:08".
+    let timestamp = new Date().toISOString();
+    const titleMatch = (extractedData["Position Received"] ?? "").match(
+      /title="(\d{4}-\d{2}-\d{2} \d{2}:\d{2})/,
+    );
+    if (titleMatch?.[1]) {
+      const [datePart, timePart] = titleMatch[1].split(" ");
+      const [year, month, day] = datePart.split("-").map(Number);
+      const [hour, minute] = timePart.split(":").map(Number);
+      timestamp = new Date(
+        Date.UTC(year, month - 1, day, hour, minute),
+      ).toISOString();
     }
 
     const position = {
-      latitude: this.dmsToDecimalDegreesMST(extractedData.Latitude),
-      longitude: this.dmsToDecimalDegreesMST(extractedData.Longitude),
-      course: 10,
-      speed: parseFloat(extractedData.Speed),
-      timestamp: new Date(parsedDate).toISOString(),
+      latitude,
+      longitude,
+      course,
+      speed,
+      timestamp,
     };
     console.log(position);
-    this.verifyPosition(position);
+    // verifyPosition checks the AIS-style { lat, lon } shape.
+    this.verifyPosition({ lat: latitude, lon: longitude });
     return position;
   };
 }

@@ -1,140 +1,271 @@
-<h1 id="position-api">Position API</h1>
-<p>A Node.js/TypeScript API for retrieving real-time positions of
-vessels and aircraft from various sources, including MarineTraffic (AIS)
-and ADS-B Exchange.</p>
-<h2 id="features">Features</h2>
-<ul>
-<li>Fetch latest vessel positions by MMSI from MarineTraffic.</li>
-<li>Fetch latest aircraft positions by ICAO from ADS-B Exchange.</li>
-<li>Legacy endpoints for compatibility.</li>
-<li>Area and port-based vessel queries.</li>
-<li>Puppeteer-based scraping with stealth plugin for anti-bot
-evasion.</li>
-</ul>
-<h2 id="getting-started">Getting Started</h2>
-<h3 id="prerequisites">Prerequisites</h3>
-<ul>
-<li>Node.js (v18+ recommended)</li>
-<li>npm</li>
-</ul>
-<h3 id="installation">Installation</h3>
-<div class="sourceCode" id="cb1"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/transparency-everywhere/position-api.git</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> position-api</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">npm</span> install</span></code></pre></div>
-<h3 id="configuration">Configuration</h3>
-<p>Copy the environment template and adjust as needed:</p>
-<div class="sourceCode" id="cb2"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> .env.template .env</span></code></pre></div>
-<h3 id="build">Build</h3>
-<div class="sourceCode" id="cb3"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">npm</span> run build</span></code></pre></div>
-<h3 id="run">Run</h3>
-<p>Development mode (with auto-reload):</p>
-<div class="sourceCode" id="cb4"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">npm</span> run dev</span></code></pre></div>
-<p>Production mode:</p>
-<div class="sourceCode" id="cb5"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">npm</span> start</span></code></pre></div>
-<h2 id="api-endpoints">API Endpoints</h2>
-<h3 id="vessel-position">Vessel Position</h3>
-<ul>
-<li><code>GET /ais/mt/:mmsi/location/latest</code><br />
-Get latest position for a vessel by MMSI.</li>
-</ul>
-<h3 id="aircraft-position">Aircraft Position</h3>
-<ul>
-<li><code>GET /adsb/adsbe/:icao/location/latest</code><br />
-Get latest position for an aircraft by ICAO code.</li>
-</ul>
-<h3 id="legacy-endpoints">Legacy Endpoints</h3>
-<ul>
-<li><code>/legacy/getLastPositionFromVF/:mmsi</code></li>
-<li><code>/legacy/getLastPositionFromMT/:mmsi</code></li>
-<li><code>/legacy/getLastPosition/:mmsi</code></li>
-<li><code>/legacy/getVesselsInArea/:area</code></li>
-<li><code>/legacy/getVesselsNearMe/:lat/:lng/:distance</code></li>
-<li><code>/legacy/getVesselsInPort/:shipPort</code></li>
-</ul>
-<h2 id="development">Development</h2>
-<ul>
-<li>Lint code: <code>npm run lint</code></li>
-<li>Format code: <code>npm run prettier</code></li>
-<li>Run tests: <code>npm test</code></li>
-</ul>
-<h2 id="contributing">Contributing</h2>
-<p>Pull requests are welcome! For major changes, please open an issue
-first to discuss what you would like to change.</p>
-<h2 id="license">License</h2>
-<p><a href="LICENSE">ISC</a></p>
-<hr />
-<p><em>Powered by Node.js, Express, Puppeteer, and TypeScript.</em> curl
-<a href="http://localhost:5000/legacy/getVesselsInArea/WMED,EMED"
-class="uri">http://localhost:5000/legacy/getVesselsInArea/WMED,EMED</a></p>
-<h1 id="legacy-get-vessels-near-a-location">Legacy: Get vessels near a
-location</h1>
-<p>curl <a
-href="http://localhost:5000/legacy/getVesselsNearMe/37.7749/-122.4194/10"
-class="uri">http://localhost:5000/legacy/getVesselsNearMe/37.7749/-122.4194/10</a></p>
-<h1 id="legacy-get-vessels-in-port">Legacy: Get vessels in port</h1>
-<p>curl <a href="http://localhost:5000/legacy/getVesselsInPort/Hamburg"
-class="uri">http://localhost:5000/legacy/getVesselsInPort/Hamburg</a></p>
-<pre><code>
----
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Position API — real-time vessel &amp; aircraft positions</title>
+  <meta name="description" content="A Node.js/TypeScript API for real-time positions of vessels (AIS / MarineTraffic) and aircraft (ADS-B Exchange)." />
+  <style>
+    :root {
+      --bg: #0b1220;
+      --bg-soft: #111c2e;
+      --card: #16233a;
+      --border: #243650;
+      --text: #e6edf6;
+      --muted: #9fb1c9;
+      --accent: #4cc2ff;
+      --accent-2: #7c9cff;
+      --get: #2ea043;
+      --code-bg: #0a121f;
+      --radius: 14px;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f6f8fc;
+        --bg-soft: #eef2f9;
+        --card: #ffffff;
+        --border: #dce3ee;
+        --text: #11203a;
+        --muted: #5b6b85;
+        --accent: #0a6ed1;
+        --accent-2: #5a4cff;
+        --code-bg: #0e1726;
+      }
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .wrap { max-width: 900px; margin: 0 auto; padding: 0 24px; }
 
-## Notes
+    header.hero {
+      background:
+        radial-gradient(1200px 400px at 80% -10%, rgba(76,194,255,0.18), transparent),
+        linear-gradient(180deg, var(--bg-soft), var(--bg));
+      border-bottom: 1px solid var(--border);
+      padding: 72px 0 56px;
+    }
+    .eyebrow {
+      display: inline-block;
+      font-size: 13px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px 12px;
+      margin-bottom: 18px;
+    }
+    h1 {
+      font-size: clamp(34px, 6vw, 52px);
+      line-height: 1.1;
+      margin: 0 0 16px;
+      letter-spacing: -0.02em;
+    }
+    .lead { font-size: 19px; color: var(--muted); max-width: 640px; margin: 0 0 28px; }
+    .cta { display: flex; flex-wrap: wrap; gap: 12px; }
+    .btn {
+      display: inline-block;
+      padding: 11px 20px;
+      border-radius: 10px;
+      font-weight: 600;
+      border: 1px solid var(--border);
+    }
+    .btn.primary { background: var(--accent); color: #06121f; border-color: transparent; }
+    .btn.primary:hover { text-decoration: none; filter: brightness(1.08); }
+    .btn.ghost { color: var(--text); }
+    .btn.ghost:hover { text-decoration: none; border-color: var(--accent); }
 
-- All endpoints return JSON.
-- Replace `localhost:5000` with your server&#39;s address and port if different.
-- Pull requests and issues are welcome!
+    section { padding: 48px 0; border-bottom: 1px solid var(--border); }
+    section h2 { font-size: 26px; margin: 0 0 8px; letter-spacing: -0.01em; }
+    section .sub { color: var(--muted); margin: 0 0 28px; }
 
----
+    .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
+    .feature {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    .feature h3 { margin: 0 0 6px; font-size: 16px; }
+    .feature p { margin: 0; color: var(--muted); font-size: 14px; }
 
-## Notes
+    .endpoint {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      margin-bottom: 14px;
+    }
+    .endpoint .route { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 15px; }
+    .method {
+      background: var(--get);
+      color: #fff;
+      font-weight: 700;
+      font-size: 12px;
+      padding: 2px 9px;
+      border-radius: 6px;
+      letter-spacing: .05em;
+    }
+    .endpoint .desc { color: var(--muted); font-size: 14px; margin: 8px 0 0; }
+    pre {
+      background: var(--code-bg);
+      color: #e6edf6;
+      border-radius: 10px;
+      padding: 14px 16px;
+      overflow-x: auto;
+      font-size: 13.5px;
+      margin: 12px 0 0;
+      border: 1px solid var(--border);
+    }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    p code, li code { background: var(--bg-soft); padding: 1px 6px; border-radius: 5px; font-size: .9em; }
 
-- All endpoints return JSON.
-- Replace `localhost:5000` with your server&#39;s address and port if different.
-- Pull requests and issues are welcome!
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
 
----
-- **Get latest location by ICAO**</code></pre>
-<p>GET /adsb/adsbe/:icao/location/latest <code>**Example:**</code> curl
-<a href="http://localhost:5000/adsb/adsbe/abc123/location/latest"
-class="uri">http://localhost:5000/adsb/adsbe/abc123/location/latest</a>
-```</p>
-<h3 id="legacy-vessel-routes">Legacy Vessel Routes</h3>
-<ul>
-<li><p><strong>Get last position from MST (replaces VF)</strong></p>
-<pre><code>GET /legacy/getLastPositionFromVF/:mmsi</code></pre>
-<p><strong>Example:</strong></p>
-<pre><code>curl http://localhost:5000/legacy/getLastPositionFromVF/211879870</code></pre></li>
-<li><p><strong>Get last position from Marinetraffic</strong></p>
-<pre><code>GET /legacy/getLastPositionFromMT/:mmsi</code></pre>
-<p><strong>Example:</strong></p>
-<pre><code>curl http://localhost:5000/legacy/getLastPositionFromMT/211879870</code></pre></li>
-<li><p><strong>Get last position (default)</strong></p>
-<pre><code>GET /legacy/getLastPosition/:mmsi</code></pre>
-<p><strong>Example:</strong></p>
-<pre><code>curl http://localhost:5000/legacy/getLastPosition/211879870</code></pre></li>
-<li><p><strong>Get vessels in area</strong></p>
-<pre><code>GET /legacy/getVesselsInArea/:area</code></pre>
-<ul>
-<li><code>:area</code> is a comma-separated list,
-e.g. <code>WMED,EMED</code> <strong>Example:</strong></li>
-</ul>
-<pre><code>curl http://localhost:5000/legacy/getVesselsInArea/WMED,EMED</code></pre></li>
-<li><p><strong>Get vessels near me</strong></p>
-<pre><code>GET /legacy/getVesselsNearMe/:lat/:lng/:distance</code></pre>
-<p><strong>Example:</strong></p>
-<pre><code>curl http://localhost:5000/legacy/getVesselsNearMe/37.7749/-122.4194/10</code></pre></li>
-<li><p><strong>Get vessels in port</strong></p>
-<pre><code>GET /legacy/getVesselsInPort/:shipPort</code></pre>
-<p><strong>Example:</strong></p>
-<pre><code>curl http://localhost:5000/legacy/getVesselsInPort/Hamburg</code></pre></li>
-</ul>
-<h2 id="notes">Notes</h2>
-<ul>
-<li>All endpoints return JSON.</li>
-<li>Replace <code>localhost:5000</code> with your server’s address and
-port if different.</li>
-</ul>
+    .steps { list-style: none; counter-reset: step; padding: 0; margin: 0; }
+    .steps li { position: relative; padding: 0 0 14px 42px; color: var(--muted); }
+    .steps li::before {
+      counter-increment: step;
+      content: counter(step);
+      position: absolute; left: 0; top: 0;
+      width: 28px; height: 28px;
+      display: grid; place-items: center;
+      background: var(--accent); color: #06121f;
+      border-radius: 50%; font-weight: 700; font-size: 14px;
+    }
+    .steps li b { color: var(--text); }
+
+    footer { padding: 36px 0 60px; color: var(--muted); font-size: 14px; }
+    footer .tags { margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <span class="eyebrow">Real-time tracking API</span>
+      <h1>Position API</h1>
+      <p class="lead">
+        A Node.js / TypeScript API for the latest known position of
+        <strong>vessels</strong> (AIS&nbsp;/&nbsp;MarineTraffic) and
+        <strong>aircraft</strong> (ADS-B&nbsp;Exchange). JSON responses, no API key required.
+      </p>
+      <div class="cta">
+        <a class="btn primary" href="#endpoints">View endpoints</a>
+        <a class="btn ghost" href="/llms.txt">LLM instructions →</a>
+      </div>
+    </div>
+  </header>
+
+  <section>
+    <div class="wrap">
+      <h2>Features</h2>
+      <p class="sub">Everything you need to locate a moving target.</p>
+      <div class="features">
+        <div class="feature">
+          <h3>🚢 Vessel positions</h3>
+          <p>Latest location for any ship by MMSI, sourced from MarineTraffic AIS.</p>
+        </div>
+        <div class="feature">
+          <h3>✈️ Aircraft positions</h3>
+          <p>Latest location for any aircraft by ICAO hex address via ADS-B Exchange.</p>
+        </div>
+        <div class="feature">
+          <h3>🗺️ Area &amp; port queries</h3>
+          <p>List vessels in a region, near a coordinate, or inside a named port.</p>
+        </div>
+        <div class="feature">
+          <h3>🤖 Agent-ready</h3>
+          <p>A <a href="/llms.txt"><code>/llms.txt</code></a> spec lets LLMs call the API correctly.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="endpoints">
+    <div class="wrap">
+      <h2>API endpoints</h2>
+      <p class="sub">All endpoints are read-only HTTP <code>GET</code> and return JSON.</p>
+
+      <h3 style="margin-top:8px">Vessel &amp; aircraft</h3>
+      <div class="endpoint">
+        <div class="route"><span class="method">GET</span> <code>/ais/mt/:mmsi/location/latest</code></div>
+        <p class="desc">Latest position for a vessel by MMSI (MarineTraffic).</p>
+        <pre><code>curl http://localhost:5000/ais/mt/211879870/location/latest</code></pre>
+      </div>
+      <div class="endpoint">
+        <div class="route"><span class="method">GET</span> <code>/adsb/adsbe/:icao/location/latest</code></div>
+        <p class="desc">Latest position for an aircraft by ICAO hex address (ADS-B Exchange).</p>
+        <pre><code>curl http://localhost:5000/adsb/adsbe/abc123/location/latest</code></pre>
+      </div>
+
+      <h3 style="margin-top:28px">Legacy endpoints</h3>
+      <div class="grid-2">
+        <div class="endpoint"><div class="route"><span class="method">GET</span> <code>/legacy/getLastPositionFromMT/:mmsi</code></div><p class="desc">Vessel position from MarineTraffic.</p></div>
+        <div class="endpoint"><div class="route"><span class="method">GET</span> <code>/legacy/getLastPositionFromVF/:mmsi</code></div><p class="desc">Vessel position (served by the MST source).</p></div>
+        <div class="endpoint"><div class="route"><span class="method">GET</span> <code>/legacy/getLastPosition/:mmsi</code></div><p class="desc">Vessel position from the default source.</p></div>
+        <div class="endpoint"><div class="route"><span class="method">GET</span> <code>/legacy/getVesselsInArea/:area</code></div><p class="desc">Vessels in a region, e.g. <code>WMED,EMED</code>.</p></div>
+        <div class="endpoint"><div class="route"><span class="method">GET</span> <code>/legacy/getVesselsNearMe/:lat/:lng/:distance</code></div><p class="desc">Vessels within a distance (km) of a coordinate.</p></div>
+        <div class="endpoint"><div class="route"><span class="method">GET</span> <code>/legacy/getVesselsInPort/:shipPort</code></div><p class="desc">Vessels in a named port, e.g. <code>Hamburg</code>.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Response shape</h2>
+      <p class="sub">Every position endpoint returns the same envelope.</p>
+      <pre><code>{
+  "error": null,
+  "data": {
+    "timestamp": "2026-06-02T12:34:56Z",
+    "latitude": 53.5413,
+    "longitude": 9.9846,
+    "course": 187.4,
+    "speed": 12.1,
+    "source": "marinetraffic",
+    "source_type": "ais",
+    "altitude": null
+  }
+}</code></pre>
+      <p style="color:var(--muted);font-size:14px">
+        On failure, <code>error</code> holds a message and <code>data</code> is <code>null</code>.
+        <code>altitude</code> is present for aircraft only.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Getting started</h2>
+      <p class="sub">Run it locally in under a minute.</p>
+      <ol class="steps">
+        <li><b>Clone &amp; install</b> — <code>npm install</code> (Node.js v18+).</li>
+        <li><b>Configure</b> — <code>cp .env.template .env</code> and adjust as needed.</li>
+        <li><b>Run</b> — <code>npm start</code> for production, or <code>npm run dev</code> for auto-reload.</li>
+        <li><b>Call it</b> — the server listens on port <code>5000</code> by default.</li>
+      </ol>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div>Powered by Node.js, Express, Puppeteer &amp; TypeScript.</div>
+      <div class="tags">
+        <a href="/llms.txt">LLM instructions</a> ·
+        <a href="https://github.com/aardvark82/20260601-vessel-position-api">Source</a> ·
+        <a href="https://github.com/aardvark82/20260601-vessel-position-api/blob/main/LICENSE">ISC License</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

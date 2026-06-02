@@ -74,6 +74,14 @@ npm start
 - `/legacy/getVesselsNearMe/:lat/:lng/:distance`
 - `/legacy/getVesselsInPort/:shipPort`
 
+## For LLMs / agents
+
+Machine-readable usage instructions are served at [`/llms.txt`](http://localhost:5000/llms.txt) and live in [`src/static/llms.txt`](src/static/llms.txt).
+
+## Access logs
+
+Every request is logged as a single JSON line to `logs/access.log` (and echoed to stdout). Override the directory with the `LOG_DIR` env var. Each entry includes the timestamp, client IP, method, URL, status code, response time, and user agent.
+
 ## Development
 
 - Lint code: `npm run lint`
