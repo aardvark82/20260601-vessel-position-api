@@ -1,6 +1,13 @@
 services:
   position-api:
     build: .
+    # TCP-listen healthcheck (port 5001 = 0x1389): passes when listening, no HTTP route needed.
+    healthcheck:
+      test: ["CMD-SHELL", "grep -qiE ':1389 [0-9A-F]+:[0-9A-F]+ 0A ' /proc/net/tcp /proc/net/tcp6 2>/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
     environment:
       - NODE_ENV=production
       - PORT=5001
